@@ -55,6 +55,7 @@ capturaDeNumero:
     mov ecx, mensajeIngresarNum
     int 80h
 
+capturaDeNumeroReintento:
     ; Lee lo que el usuario ingresa 
     mov eax, 3
     mov ebx, 0
@@ -69,6 +70,12 @@ capturaDeNumero:
 
     cmp al, '9'
     ja inputInvalido  ; >9 = invalido
+
+    ; Verifica si se ingresó más de un carácter
+    mov ah, [input+1]
+    cmp ah, 10        ; Verifica si el segundo carácter es una nueva línea (Enter)
+    jne inputInvalido2
+
     sub al, '0'  ; Convierte a numero
     ret
 
@@ -79,7 +86,10 @@ inputInvalido:
     mov edx, mensajeDeError_len
     mov ecx, mensajeDeError
     int 80h
-    jmp capturaDeNumero
+    jmp capturaDeNumeroReintento
+    
+inputInvalido2:
+    jmp capturaDeNumeroReintento
 
 transponerMatriz:
     mov esi, matrix
@@ -151,4 +161,3 @@ salidaDelPrograma:
     mov eax, 1
     xor ebx, ebx
     int 80h
-
