@@ -1,11 +1,13 @@
 section .data
-    prompt db 'Ingrese un numero (0-9): ', 0
-    prompt_len equ $ - prompt
-    invalid_input_msg db 'Entrada invalida. Por favor ingrese un valor adecuado: ', 0
-    invalid_input_msg_len equ $ - invalid_input_msg
-    matrix db 9 dup(0)  ; Espacio para la matriz 3x3
-    transposed db 9 dup(0)  ; Espacio para la matriz traspuesta
-    newline db 10, 0
+    mensajeIngresarNum db 'Ingrese un numero (0-9): ', 0
+    mensajeIngresarNum_len equ $ - mensajeIngresarNum
+
+    mensajeDeError db 'Entrada invalida. Por favor ingrese un valor adecuado: ', 0
+    mensajeDeError_len equ $ - mensajeDeError
+
+    matrix db 9 dup(0) 
+    matrixTranspuesta db 9 dup(0)  
+    saltoDeLinea db 10, 0
 
 section .bss
     input resb 2  ; Espacio para almacenar la entrada del usuario
@@ -17,71 +19,71 @@ _start:
     ; Capturar los elementos de la matriz
     mov ecx, 9
     mov esi, matrix
-captura_loop:
+    
+cicloPrincipal:
     push ecx
     push esi
-    call captura_numero
+    call capturaDeNumero
     pop esi
     pop ecx
     mov [esi], al
     inc esi
-    loop captura_loop
+    loop cicloPrincipal
 
-    ; Calcular la traspuesta de la matriz
-    call transponer_matriz
+    call transponerMatriz
 
-    ; Mostrar la matriz original
+    ; Muestra la matrix original
     mov ecx, 9
     mov esi, matrix
-    call display_matrix
-    call print_newline
+    call mostrarMatriz
+    call mostrarSaltoDeLinea
 
-    ; Mostrar la matriz traspuesta
+    ; Muestra la matrix transpuesta
     mov ecx, 9
-    mov esi, transposed
-    call display_matrix
-    call print_newline
+    mov esi, matrixTranspuesta
+    call mostrarMatriz
+    call mostrarSaltoDeLinea
 
-    ; Salir del programa
-    call exit
+    ; Se termina el programa
+    call salidaDelPrograma
 
-captura_numero:
-    ; Mostrar el prompt
+capturaDeNumero:
+    ; Muestra el mensaje para solicitar el numero
     mov eax, 4
     mov ebx, 1
-    mov edx, prompt_len
-    mov ecx, prompt
-    int 0x80
+    mov edx, mensajeIngresarNum_len
+    mov ecx, mensajeIngresarNum
+    int 80h
 
-    ; Leer la entrada del usuario
+    ; Lee lo que el usuario ingresa 
     mov eax, 3
     mov ebx, 0
     mov ecx, input
     mov edx, 2
-    int 0x80
+    int 80h
 
-    ; Validar que sea un número del 0 al 9
+    ; Valida que el input sea un número del 0 al 9
     mov al, [input]
     cmp al, '0'
-    jb invalid_input  ; Si es menor que '0', es inválido
+    jb inputInvalido  ; <0 = invalido 
+
     cmp al, '9'
-    ja invalid_input  ; Si es mayor que '9', es inválido
-    sub al, '0'  ; Convertir carácter a número
+    ja inputInvalido  ; >9 = invalido
+    sub al, '0'  ; Convierte a numero
     ret
 
-invalid_input:
-    ; Mostrar mensaje de entrada inválida
+inputInvalido:
+    ; Muestra que el input es invalido
     mov eax, 4
     mov ebx, 1
-    mov edx, invalid_input_msg_len
-    mov ecx, invalid_input_msg
-    int 0x80
-    jmp captura_numero
+    mov edx, mensajeDeError_len
+    mov ecx, mensajeDeError
+    int 80h
+    jmp capturaDeNumero
 
-transponer_matriz:
-    ; Transponer la matriz 3x3
+transponerMatriz:
     mov esi, matrix
-    mov edi, transposed
+    mov edi, matrixTranspuesta
 
     mov al, [esi]
     mov [edi], al
@@ -106,27 +108,27 @@ transponer_matriz:
 
     ret
 
-display_matrix:
-    ; Mostrar una matriz en formato 3x3
+mostrarMatriz:
     mov ecx, 3
-display_matrix_row:
+
+mostrarMatrizFila:
     push ecx
     mov ecx, 3
-display_matrix_col:
+
+mostrarMatrizColumna:
     push ecx
     push esi
-    call display_numero
+    call mostrarNumero
     pop esi
     pop ecx
     inc esi
-    loop display_matrix_col
-    call print_newline
+    loop mostrarMatrizColumna
+    call mostrarSaltoDeLinea
     pop ecx
-    loop display_matrix_row
+    loop mostrarMatrizFila
     ret
 
-display_numero:
-    ; Convertir el número a carácter y mostrarlo
+mostrarNumero:
     mov al, [esi]
     add al, '0'
     mov [input], al
@@ -134,20 +136,19 @@ display_numero:
     mov ebx, 1
     mov ecx, input
     mov edx, 1
-    int 0x80
+    int 80h
     ret
 
-print_newline:
-    ; Mostrar nueva línea
+mostrarSaltoDeLinea:
     mov eax, 4
     mov ebx, 1
-    mov ecx, newline
+    mov ecx, saltoDeLinea
     mov edx, 1
-    int 0x80
+    int 80h
     ret
 
-exit:
+salidaDelPrograma:
     mov eax, 1
     xor ebx, ebx
-    int 0x80
+    int 80h
 
